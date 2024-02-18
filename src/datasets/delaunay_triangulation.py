@@ -50,8 +50,6 @@ if __name__ == "__main__":
     face_mesh = mp_face_mesh.FaceMesh()
     video_capture = cv2.VideoCapture(2)
 
-    # img = cv2.imread(r'C:\Users\Noisecape\AI\Datasets\CelebA-HQ\00004.png')
-
     while True:
         ret, img = video_capture.read()
 
