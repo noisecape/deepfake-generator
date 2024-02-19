@@ -1,6 +1,7 @@
 import mediapipe as mp
 import cv2
 import numpy as np
+import random
 
 
 def draw_landmarks(processed_face, img):
@@ -42,28 +43,49 @@ def calculate_triangles(processed_face):
 
     return triangles
 
+
+def mask_triangles(img, triangles, perc=0.75):
+
+    n_triangles = int(triangles.shape[0]*perc)
+    population = np.arange(triangles.shape[0])
+    random_triangles = random.sample(list(population), k=n_triangles)
+
+    for idx in random_triangles:
+        coordinates = triangles[idx]
+        pts1 = [coordinates[0], coordinates[1]]
+        pts2 = [coordinates[2], coordinates[3]]
+        pts3 = [coordinates[4], coordinates[5]]
+        points = np.array([[pts1, pts2], [pts2, pts3], [pts1, pts3]], dtype=np.int32)
+        points = points.reshape(-1, 1, 2)
+
+        cv2.fillPoly(img, [points], color=(0,0,0))
+
     
 if __name__ == "__main__":
 
     mp_face_mesh = mp.solutions.face_mesh
 
     face_mesh = mp_face_mesh.FaceMesh()
-    video_capture = cv2.VideoCapture(2)
+    # video_capture = cv2.VideoCapture(2)
+    img = cv2.imread(r'C:\Users\Noisecape\AI\Datasets\CelebA-HQ\53956.png')
 
     while True:
-        ret, img = video_capture.read()
+        # ret, img = video_capture.read()
 
         height, width, _ = img.shape
         processed_face = face_mesh.process(img)
          # img = draw_landmarks(processed_face, img)
         triangles = calculate_triangles(processed_face)
-        draw_triangles(triangles, img)
-        draw_landmarks(processed_face, img)
+        # draw_triangles(triangles, img)
+        # draw_landmarks(processed_face, img)
+        mask_triangles(img, triangles)
+
         
         cv2.imshow("Image", img)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'): 
-            break
+        # if cv2.waitKey(1) & 0xFF == ord('q'): 
+        #     break
+        break
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
