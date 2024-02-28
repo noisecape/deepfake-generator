@@ -11,7 +11,7 @@ if __name__ == "__main__":
         A.Resize(224, 224),
         ToTensorV2()
         })
-    dataset = MaskFace(df, perc=0.75, transforms=transforms)
+    dataset = MaskFace(df, perc=0.45, transforms=transforms)
 
     dataloader = DataLoader(dataset, batch_size=3, shuffle=True)
 

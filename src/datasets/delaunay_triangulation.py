@@ -78,7 +78,7 @@ if __name__ == "__main__":
         triangles = calculate_triangles(processed_face)
         # draw_triangles(triangles, img)
         # draw_landmarks(processed_face, img)
-        mask_triangles(img, triangles)
+        mask_triangles(img, triangles, perc=0.5)
 
         
         cv2.imshow("Image", img)

@@ -8,10 +8,11 @@ N_LANDMARKS = 468
 
 class MaskFace(Dataset):
 
-    def __init__(self, df, perc=0.75, transforms=None):
+    def __init__(self, df, perc_mask_predictor=0.65, perc_mask_target=0.55, transforms=None):
         super(MaskFace, self).__init__()
         self.df = df
-        self.perc = perc
+        self.perc_mask_predictor = perc_mask_predictor
+        self.perc_mask_target = perc_mask_target
         mp_face_mesh = mp.solutions.face_mesh
         self.face_mesh = mp_face_mesh.FaceMesh()
         self.transforms = transforms
@@ -42,9 +43,9 @@ class MaskFace(Dataset):
     
     def mask_triangles(self, img, triangles):
         masked_img = img.copy()
-        n_triangles = int(triangles.shape[0]*self.perc)
+        n_triangles_predictor = int(triangles.shape[0]*self.perc_mask_predictor)
         population = np.arange(triangles.shape[0])
-        random_triangles = random.sample(list(population), k=n_triangles)
+        random_triangles = random.sample(list(population), k=n_triangles_predictor)
 
         for idx in random_triangles:
             coordinates = triangles[idx]
@@ -55,8 +56,11 @@ class MaskFace(Dataset):
             points = points.reshape(-1, 1, 2)
 
             masked_img = cv2.fillPoly(masked_img, [points], color=(0,0,0))
-
-        return masked_img
+        
+        n_triangles_targets = int(triangles.shape[0]*self.perc_mask_target)
+        target_triangles = random.sample(list(population), k=n_triangles_targets) # NB: these are the triangles you keep! So you need to mask all the others
+            
+        return masked_img, target_triangles
 
     def __len__(self):
         return self.df.shape[0]
@@ -67,7 +71,8 @@ class MaskFace(Dataset):
         height, width, _ = img.shape
         processed_img = self.face_mesh.process(img)
         triangles = self.calculate_triangles(processed_img, height, width)
-        masked_img = self.mask_triangles(img, triangles)
+        masked_img, target_triangles = self.mask_triangles(img, triangles)
+
         masked_img = self.transforms(image=masked_img)['image']
-        img = self.transforms(image=img)['image']
-        return masked_img, img
+        
+        return masked_img, target_triangles
